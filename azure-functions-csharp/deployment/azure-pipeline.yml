@@ -1,0 +1,62 @@
+name: Azure Functions C# Pipeline
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - FunctionApp1/*
+
+variables:
+  functionPath: 'azure-functions-csharp/FunctionApp1' # Your Functions app path.
+  functionname: 'FunctionApp1'
+  artifactName: 'drop'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: Build
+    displayName: Build Azure Function
+    jobs:
+      - job: BuildAzureFunction
+        displayName: Build C# Azure Functions w/ Dotnet core
+        steps:
+          - script: |
+              dotnet restore
+              dotnet build --configuration Release
+            workingDirectory: $(System.DefaultWorkingDirectory)/$(functionPath)
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: publish
+              workingDirectory: $(System.DefaultWorkingDirectory)/$(functionPath)
+              arguments: '--configuration Release --output publish_output'
+              projects: '$(System.DefaultWorkingDirectory)/$(functionPath)/*.csproj'
+              publishWebProjects: false
+              modifyOutputPath: false
+              zipAfterPublish: false
+          - task: ArchiveFiles@2
+            displayName: "Archive files"
+            inputs:
+              rootFolderOrFile: "$(System.DefaultWorkingDirectory)/$(functionPath)/publish_output"
+              includeRootFolder: false
+              archiveFile: "$(System.DefaultWorkingDirectory)/$(functionPath)/build$(Build.BuildId).zip"
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(System.DefaultWorkingDirectory)/$(functionPath)/build$(Build.BuildId).zip'
+              artifactName: '$(artifactName)'
+  - stage: Deploy
+    jobs:
+      - deployment: DeployAzureFunction
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+              - task: AzureFunctionApp@1
+                inputs:
+                  azureSubscription: 'AzureServiceConnection' # Replace with your service connection name
+                  appType: 'functionAppLinux'
+                  appName: $(functionName)
+                  package: '$(Build.ArtifactStagingDirectory)/$(artifactName)/*.zip'
+                displayName: Deploy Azure Function
+                condition: succeeded()
