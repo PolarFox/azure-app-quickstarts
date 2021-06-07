@@ -20,7 +20,7 @@ stages:
     displayName: Build Azure Function
     jobs:
       - job: BuildAzureFunction
-        displayName: Build C# Azure Functions w/ Dotnet core
+        displayName: Build C# Azure Functions w/ Python 3.8
         steps:
           - task: UsePythonVersion@0
             inputs:
@@ -31,7 +31,7 @@ stages:
               source worker_venv/bin/activate
               pip3.8 install setuptools
               pip3.8 install -r requirements.txt
-            workingDirectory: 'parser/'
+            workingDirectory: '$(Build.SourcesDirectory)/$(functionPath)'
             displayName: Build virtual environment
           - task: ArchiveFiles@2
             inputs:
