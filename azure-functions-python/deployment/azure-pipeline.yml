@@ -43,19 +43,19 @@ stages:
           - publish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
             displayName: 'Upload package'
             artifact: '$(artifactName)'
-  # - stage: Deploy
-  #   jobs:
-  #     - deployment: DeployAzureFunction
-  #       environment: 'development'
-  #       strategy:
-  #         runOnce:
-  #           deploy:
-  #             steps:
-  #             - task: AzureFunctionApp@1
-  #               inputs:
-  #                 azureSubscription: 'AzureServiceConnection' # Replace with your service connection name
-  #                 appType: 'functionAppLinux'
-  #                 appName: $(functionName)
-  #                 package: '$(Build.ArtifactStagingDirectory)/$(artifactName)/*.zip'
-  #               displayName: Deploy Azure Function
-  #               condition: succeeded()
+  - stage: Deploy
+    jobs:
+      - deployment: DeployAzureFunction
+        environment: 'development'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+              - task: AzureFunctionApp@1
+                inputs:
+                  azureSubscription: 'AzureServiceConnection' # Replace with your service connection name
+                  appType: 'functionAppLinux'
+                  appName: $(functionName)
+                  package: '$(Build.ArtifactStagingDirectory)/$(artifactName)/*.zip'
+                displayName: Deploy Azure Function
+                condition: succeeded()
