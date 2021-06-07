@@ -46,7 +46,7 @@ stages:
   - stage: Deploy
     jobs:
       - deployment: DeployAzureFunction
-        environment: development
+        environment: 'development'
         strategy:
           runOnce:
             deploy:
