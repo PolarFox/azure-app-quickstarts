@@ -48,6 +48,7 @@ stages:
   - stage: Deploy
     jobs:
       - deployment: DeployAzureFunction
+        environment: env1   # Use env1 environment. Here you can use Azure DevOps environments and their features like gates.
         strategy:
           runOnce:
             deploy:
