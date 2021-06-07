@@ -1,0 +1,61 @@
+name: Azure Functions C# Pipeline
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - FunctionApp1/*
+
+variables:
+  functionPath: 'azure-functions-python' # Your Functions app path.
+  functionname: 'FunctionApp1'
+  artifactName: 'drop'
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+stages:
+  - stage: Build
+    displayName: Build Azure Function
+    jobs:
+      - job: BuildAzureFunction
+        displayName: Build Azure Functions w/ Python 3.8
+        steps:
+          - task: UsePythonVersion@0
+            inputs:
+              versionSpec: 3.8.x
+              addToPath: true
+          - bash: |
+              python3.8 -m venv worker_venv
+              source worker_venv/bin/activate
+              pip3.8 install setuptools
+              pip3.8 install -r requirements.txt
+            workingDirectory: '$(Build.SourcesDirectory)/$(functionPath)'
+            displayName: Build virtual environment
+          - task: ArchiveFiles@2
+            inputs:
+              rootFolderOrFile: '$(Build.SourcesDirectory)/$(functionPath)'
+              includeRootFolder: false
+              archiveType: zip
+              archiveFile: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+              replaceExistingArchive: true
+          - publish: '$(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip'
+            displayName: 'Upload package'
+            artifact: '$(artifactName)'
+  - stage: Deploy
+    jobs:
+      - deployment: DeployAzureFunction
+        environment: 'development'
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+              - task: AzureFunctionApp@1
+                inputs:
+                  azureSubscription: 'AzureServiceConnection' # Replace with your service connection name
+                  appType: 'functionAppLinux'
+                  appName: $(functionName)
+                  package: '$(Build.ArtifactStagingDirectory)/$(artifactName)/*.zip'
+                displayName: Deploy Azure Function
+                condition: succeeded()
