@@ -20,7 +20,7 @@ stages:
     displayName: Build Azure Function
     jobs:
       - job: BuildAzureFunction
-        displayName: Build C# Azure Functions w/ Python 3.8
+        displayName: Build Azure Functions w/ Python 3.8
         steps:
           - task: UsePythonVersion@0
             inputs:
