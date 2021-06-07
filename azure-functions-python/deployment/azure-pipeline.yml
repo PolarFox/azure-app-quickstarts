@@ -8,7 +8,7 @@ trigger:
       - FunctionApp1/*
 
 variables:
-  functionPath: 'azure-functions-python/functionapp1' # Your Functions app path.
+  functionPath: 'azure-functions-python' # Your Functions app path.
   functionname: 'FunctionApp1'
   artifactName: 'drop'
 
